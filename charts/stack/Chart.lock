@@ -1,0 +1,15 @@
+dependencies:
+- name: neodax
+  repository: https://layer-3.github.io/stack
+  version: 1.0.0
+- name: clearport
+  repository: https://layer-3.github.io/stack
+  version: 1.1.0
+- name: clearport
+  repository: https://layer-3.github.io/stack
+  version: 1.1.0
+- name: terminal
+  repository: https://layer-3.github.io/stack
+  version: 1.0.0
+digest: sha256:b54aae453226dbd1b7701cee3cfdf55da478bc4a34ca7814b4230f52e105c730
+generated: "2024-03-13T17:36:16.590597+02:00"

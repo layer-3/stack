@@ -1,0 +1,21 @@
+apiVersion: v2
+name: stack
+description: Yellow Network Stack Helm Chart
+type: application
+version: 0.1.0
+appVersion: "1.1.0"
+dependencies:
+  - name: neodax
+    version: 1.0.1
+    repository: https://layer-3.github.io/stack
+  - name: clearport
+    version: 1.1.0
+    repository: https://layer-3.github.io/stack
+    alias: clearportB
+  - name: clearport
+    version: 1.1.0
+    repository: https://layer-3.github.io/stack
+    alias: clearportA
+  - name: terminal
+    version: 1.0.0
+    repository: https://layer-3.github.io/stack

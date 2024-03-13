@@ -1,0 +1,95 @@
+neodax:
+  image:
+    tag: v1.0.0
+  externalHostname: example.neodax.com
+  tlsClusterIssuer: letsencrypt-prod
+  config: "" # |
+    # mode: dev
+  secrets:
+    FINEX_DATABASE_DRIVER: postgres
+    FINEX_DATABASE_HOST: db # CHANGEME
+    FINEX_DATABASE_PORT: "5432"
+    FINEX_DATABASE_NAME: finex
+    FINEX_DATABASE_USERNAME: finex
+    FINEX_DATABASE_PASSWORD: finex # CHANGEME
+    FINEX_DATABASE_SCHEMA: public
+    FINEX_INFLUX_HOST: influxdb-0, influxdb-1, influxdb-2 # CHANGEME
+    FINEX_INFLUX_DATABASE: finex
+  services:
+    grpc:
+      nodePort: 30000 # CHANGEME
+
+clearportB:
+  externalHostname: b.clearport.com # CHANGEME
+  externalSecret: clearport-sec
+
+  services:
+    peerGrpc:
+      nodePort: 31001 # CHANGEME
+
+  secrets:
+    TARGET_NETWORK: testnet
+    MARKET_PRICE_SOURCE: finex
+    FINEX_PRICE_FEED_URL: http://<release-name>-neodax-grpc:<neodax-grpc-port> # CHANGEME
+    FUNDING_MODE: internal
+    DATABASE_DRIVER: postgres
+    DATABASE_HOST: db
+    DATABASE_PORT: "5432"
+    DATABASE_USER: clearport_b
+    DATABASE_PASS: clearport_b # CHANGEME
+    DATABASE_NAME: clearport_b
+    DATABASE_SCHEMA: public
+
+  persistentVolume:
+    enabled: false
+
+  hooks:
+    createDb:
+      enabled: true
+    createDbUser:
+      enabled: true
+    createDbSchema:
+      enabled: true
+    addOperator:
+      enabled: true
+
+  responderMode:
+    enabled: true
+    name: Example # CHANGEME
+
+clearportA:
+  externalHostname: a.clearport.com # CHANGEME
+  externalSecret: clearport-sec
+
+  services:
+    peerGrpc:
+      nodePort: 31000 # CHANGEME
+
+  secrets:
+    TARGET_NETWORK: testnet
+    MARKET_PRICE_SOURCE: finex
+    FINEX_PRICE_FEED_URL: http://<release-name>-neodax-grpc:<neodax-grpc-port> # CHANGEME
+    FUNDING_MODE: session_key
+    DATABASE_DRIVER: postgres
+    DATABASE_HOST: db
+    DATABASE_PORT: "5432"
+    DATABASE_USER: clearport_a
+    DATABASE_PASS: clearport_a # CHANGEME
+    DATABASE_NAME: clearport_a
+    DATABASE_SCHEMA: public
+
+  persistentVolume:
+    enabled: false
+
+  hooks:
+    createDb:
+      enabled: true
+    createDbUser:
+      enabled: true
+    createDbSchema:
+      enabled: true
+
+terminal:
+  externalHostname: example.terminal.com # CHANGEME
+  secrets: {}
+    # NEXT_PUBLIC_CLEARPORT_URL: https://a.clearport.com # CHANGEME
