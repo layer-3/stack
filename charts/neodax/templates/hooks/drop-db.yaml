@@ -1,0 +1,40 @@
+{{- $_ := set . "hookName" "dropDb"}}
+{{- $hook := get .Values.hooks .hookName }}
+{{- if and $hook.enabled .Values.cleanupHooksEnabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ include "component.fullname" . }}-{{ kebabcase .hookName }}"
+  labels:
+    {{- include "component.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-delete
+    "helm.sh/hook-delete-policy": hook-succeeded
+    "helm.sh/hook-weight": "0"
+spec:
+  template:
+    metadata:
+      name: "{{ include "component.fullname" . }}-{{ kebabcase .hookName }}"
+      labels:
+        {{- include "component.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: {{ kebabcase .hookName }}
+        image: {{ include "component.image" $hook.image }}
+        env:
+          {{- include "hook.secretEnvs" . | nindent 10 }}
+        args:
+          - /bin/sh
+          - -exc
+          - |
+              echo "
+              SELECT pg_terminate_backend(pg_stat_activity.pid)
+              FROM pg_stat_activity
+              WHERE pg_stat_activity.datname = '${DB_NAME}'
+                AND pid <> pg_backend_pid();
+              " | psql -v ON_ERROR_STOP=ON
+
+              echo "DROP DATABASE ${DB_NAME}" | psql -v ON_ERROR_STOP=ON
+      {{- include "component.imagePullSecrets" . | nindent 6 }}
+{{- end }}

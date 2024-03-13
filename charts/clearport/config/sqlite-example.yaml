@@ -1,0 +1,8 @@
+secrets:
+  DATABASE_DRIVER: sqlite
+  DATABASE_NAME: /data/sqlite.db
+
+persistentVolume:
+  enabled: true
+  mountPath: /data
+  size: 10Gi

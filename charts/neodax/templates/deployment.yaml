@@ -1,0 +1,59 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "component.fullname" . }}
+  labels:
+    {{- include "component.labels" . | nindent 4 }}
+spec:
+  {{- include "component.replicaCount" . | nindent 2 }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "component.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- include "component.metricsAnnotations" .Values.metrics | nindent 8 }}
+      labels:
+        {{- include "component.selectorLabels" . | nindent 8 }}
+        {{- if .Values.extraLabels }}
+          {{- toYaml .Values.extraLabels | nindent 8 }}
+        {{- end }}
+    spec:
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "component.fullname" . }}-config
+      containers:
+        - name: finex
+          image: {{ include "component.image" .Values.image }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["finex", "engine"]
+          env:
+            {{- with .Values.services.ws }}
+            - name: FINEX_WS_PORT
+              value: {{ default .port .internalPort | quote }}
+            {{- end }}
+          {{- if or .Values.secrets .Values.externalSecret }}
+          envFrom:
+          {{- if .Values.secrets }}
+            - secretRef:
+                name: {{ include "component.fullname" . }}-opt-env
+          {{- end }}
+          {{- if .Values.externalSecret }}
+            - secretRef:
+                name: {{ .Values.externalSecret }}
+          {{- end }}
+          {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /config
+          {{- include "component.resources" . | nindent 10 }}
+          {{- $root := set . "subservice" "ws"}}
+          {{- include "component.probes" $root | nindent 10 }}
+      {{- include "component.imagePullSecrets" . | nindent 6 }}
+      {{- include "component.nodeSelectorLabels" . | nindent 6 }}
+      {{- include "component.affinity" . | nindent 6 }}
+      {{- include "component.tolerations" . | nindent 6 }}

@@ -1,0 +1,57 @@
+{{- $_ := set . "hookName" "migrateDb"}}
+{{- $hook := get .Values.hooks .hookName }}
+{{- if $hook.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ include "component.fullname" . }}-{{ kebabcase .hookName }}"
+  labels:
+    {{- include "component.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install, pre-upgrade
+    "helm.sh/hook-delete-policy": hook-succeeded
+    "helm.sh/hook-weight": "3"
+spec:
+  template:
+    metadata:
+      name: "{{ include "component.fullname" . }}-{{ kebabcase .hookName }}"
+      labels:
+        {{- include "component.selectorLabels" . | nindent 8 }}
+        {{- if .Values.extraLabels }}
+          {{- toYaml .Values.extraLabels | nindent 8 }}
+        {{- end }}
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: {{ kebabcase .hookName }}
+          image: {{ include "component.image" .Values.image }}
+          command: ["clearport", "db", "migrate"]
+          {{- if or .Values.secrets .Values.externalSecret }}
+          envFrom:
+          {{- if .Values.secrets }}
+            - secretRef:
+                name: {{ include "component.fullname" . }}-opt-env
+          {{- end }}
+          {{- if .Values.externalSecret }}
+            - secretRef:
+                name: {{ .Values.externalSecret }}
+          {{- end }}
+          {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /config
+          {{- if .Values.persistentVolume.enabled }}
+            - name: pv
+              mountPath: {{ .Values.persistentVolume.mountPath }}
+          {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "component.fullname" . }}-config
+      {{- with .Values.persistentVolume.enabled }}
+        - name: pv
+          persistentVolumeClaim:
+            claimName: {{ include "component.fullname" $ }}
+      {{- end }}
+      {{- include "component.imagePullSecrets" . | nindent 6 }}
+{{- end }}

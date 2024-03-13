@@ -1,0 +1,5 @@
+externalHostname: terminal.v4.uat.opendax.app
+externalSecret: ""
+
+secrets: {}
+# SOME_ENV: "some-value"

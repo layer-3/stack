@@ -1,0 +1,59 @@
+replicaCount: 1
+
+image:
+  repository: quay.io/openware/terminal
+  tag: 0.1.7
+  pullPolicy: IfNotPresent
+  pullSecret: openware-quay
+
+metrics:
+   port: 8080
+   enabled: false
+   endpoint: "/metrics"
+
+fullnameOverride: ""
+nameOverride: ""
+
+secrets: {}
+externalSecret: ""
+
+service:
+  name: web
+  port: 3000
+
+externalHostname: terminal.v4.uat.opendax.app
+tlsClusterIssuer: letsencrypt-prod
+
+ingress:
+  enabled: true
+  path: /
+  tls:
+    enabled: true
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+profile:
+  enabled: false
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+probes:
+  readiness: {}
+  liveness: {}
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+extraLabels: {}

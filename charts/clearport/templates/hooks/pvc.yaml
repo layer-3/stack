@@ -1,0 +1,17 @@
+{{- if .Values.persistentVolume.enabled -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "component.fullname" . }}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/resource-policy": keep
+    "helm.sh/hook-weight": "0"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: {{ .Values.persistentVolume.size }}
+{{- end }}

@@ -1,0 +1,33 @@
+{{- $_ := set . "hookName" "createDb"}}
+{{- $hook := get .Values.hooks .hookName }}
+{{- if $hook.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ include "component.fullname" . }}-{{ kebabcase .hookName }}"
+  labels:
+    {{- include "component.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-delete-policy": hook-succeeded
+    "helm.sh/hook-weight": "0"
+spec:
+  template:
+    metadata:
+      name: "{{ include "component.fullname" . }}-{{ kebabcase .hookName }}"
+      labels:
+        {{- include "component.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: {{ kebabcase .hookName }}
+        image: {{ include "component.image" $hook.image }}
+        env:
+          {{- include "hook.secretEnvs" . | nindent 10 }}
+        args:
+          - /bin/sh
+          - -exc
+          - |
+              echo "CREATE DATABASE ${DB_NAME}" | psql -v ON_ERROR_STOP=ON
+      {{- include "component.imagePullSecrets" . | nindent 6 }}
+{{- end }}

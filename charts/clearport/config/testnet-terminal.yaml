@@ -1,0 +1,28 @@
+externalHostname: terminal-clearport.v4.uat.opendax.app
+externalSecret: clearport-sec
+
+services:
+  peerGrpc:
+    nodePort: 31561
+
+secrets:
+  TARGET_NETWORK: testnet
+  MARKET_PRICE_SOURCE: finex
+  DATABASE_DRIVER: postgres
+  DATABASE_HOST: postgresql.kayen-core
+  DATABASE_PORT: "5432"
+  DATABASE_USER: terminal_clearport
+  DATABASE_PASS: YTU3ZDhmZjNjYzZk
+  DATABASE_NAME: terminal_clearport
+  DATABASE_SCHEMA: public
+
+persistentVolume:
+  enabled: false
+
+hooks:
+  createDb:
+    enabled: true
+  createDbUser:
+    enabled: true
+  createDbSchema:
+    enabled: true

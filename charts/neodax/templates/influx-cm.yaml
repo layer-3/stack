@@ -1,0 +1,144 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "component.fullname" . }}-influxdb-seed-schema
+  labels:
+    {{- include "component.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/hook-weight": "-1"
+data:
+  schema.sql: |-
+    {{- $database := .Values.secrets.FINEX_INFLUX_DATABASE }}
+    CREATE DATABASE {{ $database }};
+
+    CREATE CONTINUOUS QUERY "trade_to_cq_1m_per_source" ON {{ $database }}
+    RESAMPLE EVERY 1s FOR 3m
+    BEGIN
+      SELECT
+        FIRST(price) AS open,
+        MAX(price) AS high,
+        MIN(price) AS low,
+        LAST(price) AS close,
+        SUM(amount) AS volume,
+        SUM(total) AS quote_volume,
+        FIRST(price) * SUM(amount) AS weighted_open,
+        MAX(price) * SUM(amount) AS weighted_high,
+        MIN(price) * SUM(amount) AS weighted_low,
+        LAST(price) * SUM(amount) AS weighted_close
+      INTO "candles_1m_per_source"
+      FROM "trades"
+      GROUP BY time(1m), market, source
+    END;
+
+    CREATE CONTINUOUS QUERY "aggregated_cq_1m" ON {{ $database }}
+    RESAMPLE EVERY 1s FOR 3m
+    BEGIN
+      SELECT
+        SUM(weighted_open) / SUM(volume) AS open,
+        SUM(weighted_high) / SUM(volume) AS high,
+        SUM(weighted_low) / SUM(volume) AS low,
+        SUM(weighted_close) / SUM(volume) AS close,
+        SUM(volume) AS volume,
+        SUM(quote_volume) AS quote_volume
+        INTO "candles_1m"
+        FROM "candles_1m_per_source"
+        GROUP BY time(1m), market
+    END;
+
+    CREATE CONTINUOUS QUERY "cq_5m" ON {{ $database }}
+    RESAMPLE EVERY 5s FOR 6m
+    BEGIN
+      SELECT FIRST(open) as open, MAX(high) as high, MIN(low) as low, LAST(close) as close, SUM(volume) as volume, SUM(quote_volume) as quote_volume INTO "candles_5m" FROM "candles_1m" GROUP BY time(5m), market
+    END;
+
+    CREATE CONTINUOUS QUERY "cq_15m" ON {{ $database }}
+    RESAMPLE EVERY 5s FOR 20m
+    BEGIN
+      SELECT FIRST(open) as open, MAX(high) as high, MIN(low) as low, LAST(close) as close, SUM(volume) as volume, SUM(quote_volume) as quote_volume INTO "candles_15m" FROM "candles_5m" GROUP BY time(15m), market
+    END;
+
+    CREATE CONTINUOUS QUERY "cq_30m" ON {{ $database }}
+    RESAMPLE EVERY 5s FOR 45m
+    BEGIN
+      SELECT FIRST(open) as open, MAX(high) as high, MIN(low) as low, LAST(close) as close, SUM(volume) as volume, SUM(quote_volume) as quote_volume INTO "candles_30m" FROM "candles_15m" GROUP BY time(30m), market
+    END;
+
+    CREATE CONTINUOUS QUERY "cq_1h" ON {{ $database }}
+    RESAMPLE EVERY 5s FOR 90m
+    BEGIN
+      SELECT FIRST(open) as open, MAX(high) as high, MIN(low) as low, LAST(close) as close, SUM(volume) as volume, SUM(quote_volume) as quote_volume INTO "candles_1h" FROM "candles_30m" GROUP BY time(1h), market
+    END;
+
+    CREATE CONTINUOUS QUERY "cq_2h" ON {{ $database }}
+    RESAMPLE EVERY 5s FOR 3h
+    BEGIN
+      SELECT FIRST(open) as open, MAX(high) as high, MIN(low) as low, LAST(close) as close, SUM(volume) as volume, SUM(quote_volume) as quote_volume INTO "candles_2h" FROM "candles_1h" GROUP BY time(2h), market
+    END;
+
+    CREATE CONTINUOUS QUERY "cq_4h" ON {{ $database }}
+    RESAMPLE EVERY 5s FOR 6h
+    BEGIN
+      SELECT FIRST(open) as open, MAX(high) as high, MIN(low) as low, LAST(close) as close, SUM(volume) as volume, SUM(quote_volume) as quote_volume INTO "candles_4h" FROM "candles_2h" GROUP BY time(4h), market
+    END;
+
+    CREATE CONTINUOUS QUERY "cq_6h" ON {{ $database }}
+    RESAMPLE EVERY 5s FOR 8h
+    BEGIN
+      SELECT FIRST(open) as open, MAX(high) as high, MIN(low) as low, LAST(close) as close, SUM(volume) as volume, SUM(quote_volume) as quote_volume INTO "candles_6h" FROM "candles_2h" GROUP BY time(6h), market
+    END;
+
+    CREATE CONTINUOUS QUERY "cq_12h" ON {{ $database }}
+    RESAMPLE EVERY 5s FOR 18h
+    BEGIN
+      SELECT FIRST(open) as open, MAX(high) as high, MIN(low) as low, LAST(close) as close, SUM(volume) as volume, SUM(quote_volume) as quote_volume INTO "candles_12h" FROM "candles_6h" GROUP BY time(12h), market
+    END;
+
+    CREATE CONTINUOUS QUERY "cq_1d" ON {{ $database }}
+    RESAMPLE EVERY 5s FOR 30h
+    BEGIN
+      SELECT FIRST(open) as open, MAX(high) as high, MIN(low) as low, LAST(close) as close, SUM(volume) as volume, SUM(quote_volume) as quote_volume INTO "candles_1d" FROM "candles_6h" GROUP BY time(1d), market
+    END;
+
+    CREATE CONTINUOUS QUERY "cq_3d" ON {{ $database }}
+    RESAMPLE EVERY 5s FOR 4d
+    BEGIN
+      SELECT FIRST(open) as open, MAX(high) as high, MIN(low) as low, LAST(close) as close, SUM(volume) as volume, SUM(quote_volume) as quote_volume INTO "candles_3d" FROM "candles_1d" GROUP BY time(3d), market
+    END;
+
+    CREATE CONTINUOUS QUERY "cq_1w" ON {{ $database }}
+    RESAMPLE EVERY 5s FOR 8d
+    BEGIN
+      SELECT FIRST(open) as open, MAX(high) as high, MIN(low) as low, LAST(close) as close, SUM(volume) as volume, SUM(quote_volume) as quote_volume INTO "candles_1w" FROM "candles_1d" GROUP BY time(1w), market
+    END;
+
+    CREATE CONTINUOUS QUERY "candles_1m_to_cq_1m" ON {{ $database }}
+    RESAMPLE EVERY 1m FOR 2m
+    BEGIN
+      SELECT last(close) AS open, last(close) AS high, last(close) AS low, last(close) AS close, last(volume) * 0 as volume, last(quote_volume) * 0 as quote_volume INTO "candles_1m" FROM "candles_1m" GROUP BY time(1m), market fill(previous)
+    END;
+
+    CREATE CONTINUOUS QUERY "charts_1h" ON {{ $database }}
+    RESAMPLE EVERY 5s FOR 2h
+    BEGIN
+      SELECT mean(price) AS price, mean(market_cap) AS market_cap, mean(total_volume) AS total_volume INTO market_charts_1h FROM market_charts_5m GROUP BY time(1h), code
+    END;
+
+    CREATE CONTINUOUS QUERY "charts_3h" ON {{ $database }}
+    RESAMPLE EVERY 5s FOR 6h
+    BEGIN
+      SELECT mean(price) AS price, mean(market_cap) AS market_cap, mean(total_volume) AS total_volume INTO market_charts_3h FROM market_charts_1h GROUP BY time(3h), code
+    END;
+
+    CREATE CONTINUOUS QUERY "charts_6h" ON {{ $database }}
+    RESAMPLE EVERY 5s FOR 12h
+    BEGIN
+      SELECT mean(price) AS price, mean(market_cap) AS market_cap, mean(total_volume) AS total_volume INTO market_charts_6h FROM market_charts_3h GROUP BY time(6h), code
+    END;
+
+    CREATE CONTINUOUS QUERY "charts_12h" ON {{ $database }}
+    RESAMPLE EVERY 5s FOR 24h
+    BEGIN
+      SELECT mean(price) AS price, mean(market_cap) AS market_cap, mean(total_volume) AS total_volume INTO market_charts_12h FROM market_charts_6h GROUP BY time(12h), code
+    END;

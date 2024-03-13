@@ -1,0 +1,45 @@
+{{- $_ := set . "hookName" "seedInfluxDb"}}
+{{- $hook := get .Values.hooks .hookName }}
+{{- if $hook.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ include "component.fullname" . }}-{{ kebabcase .hookName }}"
+  labels:
+    {{- include "component.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      name: "{{ include "component.fullname" . }}-{{ kebabcase .hookName }}"
+      labels:
+        {{- include "component.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: {{ kebabcase .hookName }}
+        image: {{ include "component.image" $hook.image }}
+        env:
+          {{- include "hook.secretEnvs" . | nindent 10 }}
+        command:
+          - sh
+          - -ec
+          - |
+            hosts=$(echo $INFLUXDB_HOSTS | tr "," "\n")
+
+            echo "Seeding InfluxDB...";
+            for host in $hosts
+            do
+              cat /opt/seed/schema.sql | influx -host $host;
+            done
+        volumeMounts:
+          - name: schema-seed
+            mountPath: /opt/seed
+      volumes:
+        - name: schema-seed
+          configMap:
+            name: {{ include "component.fullname" . }}-influxdb-seed-schema
+      {{- include "component.imagePullSecrets" . | nindent 6 }}
+{{- end }}

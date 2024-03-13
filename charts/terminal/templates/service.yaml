@@ -1,0 +1,13 @@
+{{- $svc := .Values.service }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ include "component.fullname" $ }}-{{ $svc.name }}"
+  labels:
+    {{- include "component.labels" $ | nindent 4 }}
+spec:
+  type: {{ default "ClusterIP" $svc.type }}
+  ports:
+    {{- include "service.port" $svc | nindent 4 }}
+  selector:
+    {{- include "component.selectorLabels" $ | nindent 4 }}

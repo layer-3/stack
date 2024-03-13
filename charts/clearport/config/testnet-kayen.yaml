@@ -1,0 +1,34 @@
+externalHostname: kayen-clearport.v4.uat.opendax.app
+externalSecret: clearport-sec
+
+services:
+  peerGrpc:
+    nodePort: 31551
+
+secrets:
+  TARGET_NETWORK: testnet
+  MARKET_PRICE_SOURCE: finex
+  DATABASE_DRIVER: postgres
+  DATABASE_HOST: postgresql.kayen-core
+  DATABASE_PORT: "5432"
+  DATABASE_USER: kayen_clearport
+  DATABASE_PASS: YzU1Yzc5MGNhMzcx
+  DATABASE_NAME: kayen_clearport
+  DATABASE_SCHEMA: public
+
+persistentVolume:
+  enabled: false
+
+hooks:
+  createDb:
+    enabled: true
+  createDbUser:
+    enabled: true
+  createDbSchema:
+    enabled: true
+  addOperator:
+    enabled: true
+
+responderMode:
+  enabled: true
+  name: Kayen

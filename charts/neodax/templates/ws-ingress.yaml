@@ -1,0 +1,17 @@
+apiVersion: {{ include "ingress.apiVersion" . }}
+kind: Ingress
+metadata:
+  name: {{ include "component.fullname" . }}-ws
+  labels:
+    {{- include "component.labels" . | nindent 4 }}
+  annotations:
+    {{- include "ingress.defaultAnnotations" . | nindent 4 }}
+spec:
+  {{- $svc := set .Values.services.ws "name" (printf "%s-ws" (include "component.fullname" .)) }}
+  {{- $root := set . "service" $svc }}
+  rules:
+    - host: {{ .Values.externalHostname }}
+      http:
+        paths:
+          {{- include "ingress.path" $root | nindent 10 }}
+  {{- include "ingress.tls" $root | nindent 2 }}
