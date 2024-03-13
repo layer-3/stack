@@ -4,12 +4,19 @@ kind: pipeline
 type: docker
 
 steps:
-- name: Publish
-  image: otwld/drone-chart-releaser-github-pages
-  settings:
-    cr_token:
-      from_secret: github_api_key
-    skip_existing: true
+  - name: Dependencies
+    image: quay.io/openware/k8s-go-tools:1.0.1
+    pull: if-not-exists
+    user: root
+    commands:
+      - helm dependency update charts/stack
+
+  - name: Publish
+    image: otwld/drone-chart-releaser-github-pages
+    settings:
+      cr_token:
+        from_secret: github_api_key
+      skip_existing: true
 
 trigger:
   event:

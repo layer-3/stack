@@ -1,0 +1,15 @@
+dependencies:
+- name: neodax
+  repository: file://../neodax
+  version: 1.0.1
+- name: clearport
+  repository: file://../clearport
+  version: 1.1.0
+- name: clearport
+  repository: file://../clearport
+  version: 1.1.0
+- name: terminal
+  repository: file://../terminal
+  version: 1.0.0
+digest: sha256:92204ad99feeb131eab457decb1421fb590e00cce4b4ac988e22b3824f834288
+generated: "2024-03-13T17:56:29.840548+02:00"
