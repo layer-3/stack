@@ -1,0 +1,41 @@
+{{- $_ := set . "hookName" "createDbUser"}}
+{{- $hook := get .Values.hooks .hookName }}
+{{- if $hook.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ include "component.fullname" . }}-{{ kebabcase .hookName }}"
+  labels:
+    {{- include "component.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-delete-policy": hook-succeeded
+    "helm.sh/hook-weight": "1"
+spec:
+  template:
+    metadata:
+      name: "{{ include "component.fullname" . }}-{{ kebabcase .hookName }}"
+      labels:
+        {{- include "component.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: {{ kebabcase .hookName }}
+        image: {{ include "component.image" $hook.image }}
+        env:
+          {{- include "hook.secretEnvs" . | nindent 10 }}
+        args:
+          - /bin/sh
+          - -exc
+          - |
+              echo "
+              CREATE USER ${DB_USER} WITH LOGIN ENCRYPTED PASSWORD '${DB_PASS}';
+              GRANT CREATE ON DATABASE ${DB_NAME} TO ${DB_USER};
+              
+              CREATE EXTENSION IF NOT EXISTS pg_cron;
+              SELECT cron.schedule_in_database(job_name:='cleanup_closed_orders', schedule:='0 2 * * *', command:='SELECT ${DB_SCHEMA}.cleanup_closed_orders(1000)',database:='${DB_NAME}',username:='${DB_USER}');
+              SELECT cron.schedule_in_database(job_name:='compact_orders', schedule:='0 2 * * *', command:='SELECT ${DB_SCHEMA}.compact_orders((current_date - interval ''14 days'')::date, (current_date - interval ''7 days'')::date)',database:='${DB_NAME}',username:='${DB_USER}');
+              UPDATE cron.job SET nodename = '';
+              " | psql -v ON_ERROR_STOP=ON
+      {{- include "component.imagePullSecrets" . | nindent 6 }}
+{{- end }}

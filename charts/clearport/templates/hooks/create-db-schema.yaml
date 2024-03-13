@@ -1,0 +1,45 @@
+{{- $_ := set . "hookName" "createDbSchema"}}
+{{- $hook := get .Values.hooks .hookName }}
+{{- if $hook.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ include "component.fullname" . }}-{{ kebabcase .hookName }}"
+  labels:
+    {{- include "component.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-delete-policy": hook-succeeded
+    "helm.sh/hook-weight": "2"
+spec:
+  template:
+    metadata:
+      name: "{{ include "component.fullname" . }}-{{ kebabcase .hookName }}"
+      labels:
+        {{- include "component.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: {{ kebabcase .hookName }}
+          image: {{ include "component.image" .Values.image }}
+          command: ["clearport", "db", "create"]
+          {{- if or .Values.secrets .Values.externalSecret }}
+          envFrom:
+          {{- if .Values.secrets }}
+            - secretRef:
+                name: {{ include "component.fullname" . }}-opt-env
+          {{- end }}
+          {{- if .Values.externalSecret }}
+            - secretRef:
+                name: {{ .Values.externalSecret }}
+          {{- end }}
+          {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /config
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "component.fullname" . }}-config
+      {{- include "component.imagePullSecrets" . | nindent 6 }}
+{{- end }}

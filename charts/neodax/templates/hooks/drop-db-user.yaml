@@ -1,0 +1,45 @@
+{{- $_ := set . "hookName" "dropDbUser"}}
+{{- $hook := get .Values.hooks .hookName }}
+{{- if and $hook.enabled .Values.cleanupHooksEnabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ include "component.fullname" . }}-{{ kebabcase .hookName }}"
+  labels:
+    {{- include "component.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-delete
+    "helm.sh/hook-delete-policy": hook-succeeded
+    "helm.sh/hook-weight": "1"
+spec:
+  template:
+    metadata:
+      name: "{{ include "component.fullname" . }}-{{ kebabcase .hookName }}"
+      labels:
+        {{- include "component.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: {{ kebabcase .hookName }}
+        image: {{ include "component.image" $hook.image }}
+        env:
+          {{- include "hook.secretEnvs" . | nindent 10 }}
+        args:
+          - /bin/sh
+          - -exc
+          - |
+              echo "
+              DO \$\$
+              DECLARE
+                id bigint;
+              BEGIN
+                select jobid into id from cron.job where database = '${DB_NAME}' and jobname = 'cleanup_closed_orders';
+                PERFORM cron.unschedule(id);
+                select jobid into id from cron.job where database = '${DB_NAME}' and jobname = 'compact_orders';
+                PERFORM cron.unschedule(id);
+              END \$\$;
+
+              DROP USER ${DB_USER};
+              " | psql -v ON_ERROR_STOP=ON
+      {{- include "component.imagePullSecrets" . | nindent 6 }}
+{{- end }}

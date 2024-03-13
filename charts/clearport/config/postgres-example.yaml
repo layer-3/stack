@@ -1,0 +1,19 @@
+secrets:
+  DATABASE_DRIVER: postgres
+  DATABASE_HOST: <DATABASE_HOST>
+  DATABASE_PORT: <DATABASE_PORT>
+  DATABASE_USER: <DATABASE_USER>
+  DATABASE_PASS: <DATABASE_PASS>
+  DATABASE_NAME: <DATABASE_NAME>
+  DATABASE_SCHEMA: <DATABASE_SCHEMA>
+
+persistentVolume:
+  enabled: false
+
+hooks:
+  createDb:
+    enabled: true
+  createDbUser:
+    enabled: true
+  createDbSchema:
+    enabled: true

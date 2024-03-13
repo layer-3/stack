@@ -4,7 +4,7 @@ kind: pipeline
 type: docker
 
 steps:
-- name: publish
+- name: Publish
   image: otwld/drone-chart-releaser-github-pages
   settings:
     cr_token:
