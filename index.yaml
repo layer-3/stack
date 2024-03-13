@@ -13,6 +13,15 @@ entries:
   neodax:
   - apiVersion: v1
     appVersion: "1.0"
+    created: "2024-03-13T15:48:09.001838737Z"
+    description: NeoDax Helm Chart
+    digest: 94f1b6879294f799ef6eb9c263496c22188577ebd9e248c43c7abf9c9f1534bd
+    name: neodax
+    urls:
+    - https://github.com/layer-3/stack/releases/download/neodax-1.0.1/neodax-1.0.1.tgz
+    version: 1.0.1
+  - apiVersion: v1
+    appVersion: "1.0"
     created: "2024-03-13T13:45:21.32344389Z"
     description: NeoDax Helm Chart
     digest: e59b46e29def80ab749106d5292893fbed8dbf82cd080eb8a0f30e6877daeb82
@@ -30,4 +39,4 @@ entries:
     urls:
     - https://github.com/layer-3/stack/releases/download/terminal-1.0.0/terminal-1.0.0.tgz
     version: 1.0.0
-generated: "2024-03-13T13:45:21.520206452Z"
+generated: "2024-03-13T15:48:09.001863242Z"
