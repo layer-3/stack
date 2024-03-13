@@ -29,6 +29,32 @@ entries:
     urls:
     - https://github.com/layer-3/stack/releases/download/neodax-1.0.0/neodax-1.0.0.tgz
     version: 1.0.0
+  stack:
+  - apiVersion: v2
+    appVersion: 1.1.0
+    created: "2024-03-13T15:58:32.363614197Z"
+    dependencies:
+    - name: neodax
+      repository: file://../neodax
+      version: 1.0.1
+    - alias: clearportB
+      name: clearport
+      repository: file://../clearport
+      version: 1.1.0
+    - alias: clearportA
+      name: clearport
+      repository: file://../clearport
+      version: 1.1.0
+    - name: terminal
+      repository: file://../terminal
+      version: 1.0.0
+    description: Yellow Network Stack Helm Chart
+    digest: e3002e9054bc6b7b3171196840c1225235fc995f79457445b28e23e348cfa129
+    name: stack
+    type: application
+    urls:
+    - https://github.com/layer-3/stack/releases/download/stack-0.1.0/stack-0.1.0.tgz
+    version: 0.1.0
   terminal:
   - apiVersion: v1
     appVersion: "1.0"
@@ -39,4 +65,4 @@ entries:
     urls:
     - https://github.com/layer-3/stack/releases/download/terminal-1.0.0/terminal-1.0.0.tgz
     version: 1.0.0
-generated: "2024-03-13T15:48:09.001863242Z"
+generated: "2024-03-13T15:58:32.363622296Z"
