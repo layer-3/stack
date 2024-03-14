@@ -1,0 +1,12 @@
+{% include head.html %}
+<body>
+    {{ content }}
+  
+    {%- if site.data.navbar.size > 0 -%}
+        <h2>Navigation</h2>
+        {% for item in site.data.navbar %}
+            <li><a href="{{ site.data.common.baseurl }}{{ item.url }}">{{ item.name }}</a></li>
+        {% endfor %}
+    {%- endif -%}
+
+</body>
