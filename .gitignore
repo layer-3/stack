@@ -1,1 +1,4 @@
 **/*.tgz
+_site/
+Gemfile
+Gemfile.lock
